@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyatt Clicking Simulator</title>
+    <style>
+        body {
+            background: url('https://media.giphy.com/media/pVGsAWjzvXcZW4ZBTE/giphy.gif') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.4);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        button {
+            background-color: #555;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        button:hover { background-color: #777; }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .progress { height: 10px; background: lime; width: 0%; border-radius: 5px; }
+
+        .watermark {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .music-button {
+            position: fixed;
+            bottom: 10px;
+            right: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 2px 10px;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <audio id="bg-music" loop autoplay>
+        <source src="https://orangefreesounds.com/wp-content/uploads/2018/04/Gentle-rain-loop.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <button class="music-button" onclick="document.getElementById('bg-music').play()">🎵</button>
+    
+    <div class="container">
+        <h1>Rizzcoin & SkibidiCoin Generator</h1>
+        
+        <div id="shop"></div>
+        <button onclick="resetProgress()" style="background-color: red;">Reset Progress</button>
+    </div>
+    
+    <div class="watermark">Created by YourName</div>
+    
+    <script>
+        const currencies = ['Rizzcoin', 'SkibidiCoin'];
+        let data = JSON.parse(localStorage.getItem('gameData')) || {};
+
+        currencies.forEach(currency => {
+            if (!data[currency]) {
+                data[currency] = { count: 0, gain: 1, level: 1, upgradeCost: 50, autoClickers: 0 };
+            }
+        });
+
+        function saveData() { localStorage.setItem('gameData', JSON.stringify(data)); }
+        
+        function renderShop() {
+            let shopHtml = '';
+            currencies.forEach(currency => {
+                shopHtml += `
+                    <p>Tap for <b>${currency}</b></p>
+                    <button onclick="increase('${currency}')">${currency} Generator</button>
+                    <button onclick="upgrade('${currency}')">Level Up (Cost: <span id="${currency}-upgradeCost">${data[currency].upgradeCost}</span>)</button>
+                    <button onclick="buyAutoClicker('${currency}')">Buy Auto-Clicker (1M ${currency})</button>
+                    <p><b>${currency}s</b>: <span id="${currency}-counter">${data[currency].count}</span></p>
+                    <p><b>Level</b>: <span id="${currency}-level">${data[currency].level}</span></p>
+                    <p><b>Auto-Clickers</b>: <span id="${currency}-autoClickers"></span></p>
+                    <div class="progress-bar"><div class="progress" id="${currency}-progress"></div></div>
+                `;
+            });
+            document.getElementById('shop').innerHTML = shopHtml;
+        }
+
+        function increase(currency) {
+            data[currency].count += data[currency].gain;
+            updateUI(currency);
+            saveData();
+        }
+
+        function upgrade(currency) {
+            if (data[currency].count >= data[currency].upgradeCost) {
+                data[currency].count -= data[currency].upgradeCost;
+                data[currency].gain *= 2;
+                data[currency].upgradeCost *= 2;
+                data[currency].level++;
+                updateUI(currency);
+                saveData();
+            }
+        }
+
+        function buyAutoClicker(currency) {
+            if (data[currency].count >= 1000000) {
+                data[currency].count -= 1000000;
+                data[currency].autoClickers++;
+                updateUI(currency);
+                saveData();
+            }
+        }
+
+        function updateUI(currency) {
+            document.getElementById(`${currency}-counter`).textContent = data[currency].count;
+            document.getElementById(`${currency}-level`).textContent = data[currency].level;
+            document.getElementById(`${currency}-upgradeCost`).textContent = data[currency].upgradeCost;
+            document.getElementById(`${currency}-autoClickers`).textContent = data[currency].autoClickers;
+        }
+
+        function resetProgress() {
+            if (confirm("Are you sure you want to reset all progress?")) {
+                localStorage.removeItem('gameData');
+                location.reload();
+            }
+        }
+
+        function autoClick() {
+            currencies.forEach(currency => {
+                data[currency].count += data[currency].autoClickers * data[currency].gain;
+                updateUI(currency);
+            });
+            saveData();
+        }
+
+        setInterval(autoClick, 1000);
+        renderShop();
+    </script>
+</body>
+</html>
